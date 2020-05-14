@@ -28,6 +28,18 @@ def read_chunk(f,chunk_size=5000):
       break
     yield data
 
+def reverseBits(num,bits):
+    result = 0
+    old = 0x1<<(bits-1)
+    new = 0x1
+    for i in range(bits):
+        if num & old:
+            result |= new
+        new <<= 1
+        old >>= 1
+    return result
+
+
 
 def parse_straws(filename,outfile):
   fout = ROOT.TFile(outfile,"UPDATE")
@@ -83,7 +95,7 @@ def parse_straws(filename,outfile):
     #  message[i] = str(meta['message'])[i]
     #chanMask[0] = meta['chan_mask']
     #triggers[0] = meta['triggers']
-    lookback[0] = meta['lookback']
+    lookback[0] = meta['lookback']-4
     samples[0] = meta['samples']*3
     #tdcMode[0] = meta['tdc_mode']
     #adcMode[0] = meta['adc_mode']
@@ -168,6 +180,9 @@ def parse_straws(filename,outfile):
           sample0 = (tdata[8+j*2+1] & 0x3FF)
           sample1 = ((tdata[8+j*2] & 0xF)<<6) + ((tdata[8+j*2+1] & 0xFC00) >> 10)
           sample2 = ((tdata[8+j*2] & 0x3FF0)>>4)
+          sample0 = reverseBits(sample0,10)
+          sample1 = reverseBits(sample1,10)
+          sample2 = reverseBits(sample2,10)
           hit.samples.push_back(sample0)
           hit.samples.push_back(sample1)
           hit.samples.push_back(sample2)
