@@ -2,6 +2,7 @@ import ROOT
 import json
 import os
 from array import array
+import numpy as np
 
 ROOT.gSystem.Load("event/Dict.so")
 
@@ -187,7 +188,7 @@ def parse_straws(filename,outfile):
           hit.samples.push_back(sample1)
           hit.samples.push_back(sample2)
         if samples[0] > 1:
-          hit.pedestal = sum(hit.samples[0:lookback[0]])/lookback[0]
+          hit.pedestal = np.mean(hit.samples[0:6])
           hit.peak = max(hit.samples)
           hit.minimum = min(hit.samples)
         else:
@@ -228,7 +229,8 @@ def parse_straws(filename,outfile):
           for j in range(branchev.straws.size()):
             if branchev.straws[j].warning:
               branchev.warning = True
-            
+
+          allhits[i].dT = deltat
           tree.Fill()
           timeGlobalOld = allhits[i].timeGlobal
           timeCalOld = allhits[i].timeCal
@@ -240,6 +242,7 @@ def parse_straws(filename,outfile):
           else:
             branchev.fifosfull = False
         else:
+          allhits[i].dT = deltat
           if timesincelast >= 0.0005:
             branchev.fifosfull = True
         branchev.straws.push_back(allhits[i])
@@ -265,6 +268,7 @@ if __name__ == "__main__":
   import sys
   import glob
   filenames = glob.glob(sys.argv[1])
+  print filenames
   outfilename = sys.argv[2]
   f = ROOT.TFile(outfilename,"RECREATE")
   f.Close()
