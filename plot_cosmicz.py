@@ -2,13 +2,17 @@ import ROOT
 import numpy as np
 import sys
 import math 
-require_pmt = False
 
 strawreallength=[1178.804, 1178.804, 1170.926, 1170.926, 1162.864, 1162.864, 1154.618, 1154.618, 1146.18, 1146.18, 1137.546, 1137.546, 1128.714, 1128.714, 1119.68, 1119.68, 1110.436, 1110.436, 1100.978, 1100.978, 1091.302, 1091.302, 1081.402, 1081.402, 1071.27, 1071.27, 1060.902, 1060.902, 1050.29, 1050.29, 1039.426, 1039.426, 1028.304, 1028.304, 1016.9159999999999, 1016.9159999999999, 1005.25, 1005.25, 993.3, 993.3, 981.052, 981.052, 968.5, 968.5, 955.63, 955.63, 942.428, 942.428, 928.884, 928.884, 914.978, 914.978, 900.7, 900.7, 886.028, 886.028, 870.942, 870.942, 855.426, 855.426, 839.454, 839.454, 822.998, 822.998, 806.034, 806.034, 788.528, 788.528, 770.444, 770.444, 751.744, 751.744, 732.382, 732.382, 712.304, 712.304, 691.454, 691.454, 669.76, 669.76, 647.142, 647.142, 623.504, 623.504, 598.732, 598.732, 572.688, 572.688, 545.196, 545.196, 516.038, 516.038, 496.93399999999997, 496.93399999999997, 477.508, 477.508]
 
+ROOT.gSystem.Load("event/Dict.so")
 
+from ROOT import StrawHit,Event
+
+energycut=10.
 
 fn = sys.argv[1]
+nhitcut=int(sys.argv[2])
 #entry = int(sys.argv[2])
 #ntrigs = int(sys.argv[3])
 
@@ -19,36 +23,30 @@ f = ROOT.TFile(fn);
 tr = f.Get("T")
 
 nstraws = 96
-cosmic_partners = [0 for i in range(96)]
 
 ientry = 0
 while ientry < tr.GetEntries():
   tr.GetEntry(ientry)
   entry_list = []
-  if tr.channel!=44:
-    entry_list = [ientry]
-  has_pmt = (tr.channel == 44)
-  while ientry < tr.GetEntries():
-    ientry += 1
-    tr.GetEntry(ientry)
-    if abs(tr.dT) < 100:
-      if tr.peak-tr.pedestal>10:
-        entry_list.append(ientry)
-    else:
-      break
 
-  if  (require_pmt and not has_pmt) or len(entry_list)<40:
-    continue
+  
 
-#  if (len(entry_list)<2 and not require_pmt):
-#    continue
+
+  event=tr.events
+  
+  for hit in event.straws:
+    if hit.peak-hit.pedestal>energycut:
+        entry_list.append(hit)
 
 
   
+  
   ntrigs = len(entry_list)
-  entry = entry_list[0]
+  
+  if ntrigs<nhitcut:
+    ientry+=1
+    continue
 
- 
 
   g = []
   chs = [0 for i in range(nstraws)]
@@ -67,24 +65,14 @@ while ientry < tr.GetEntries():
 #  p2.Divide(2,int(ntrigs/2)+ntrigs%2);
   
   for i in range(ntrigs):
-
-    cstr = "Entry$==%d" % (entry_list[i])
-    cut = ROOT.TCut(cstr)
-#    p2.cd(i+1)
-#    tr.Draw("samples:50*Iteration$",cut);
-#    g.append(ROOT.TGraph(15,tr.GetV2(),tr.GetV1()));
-#    g[-1].GetXaxis().SetTitle("ns");
-#    g[-1].GetYaxis().SetTitle("ADC counts (2mV LSB)");
-
-    tr.GetEntry(entry_list[i]);  
-    chs[i] = int(tr.channel)
-    zch[chs[i]] = tr.z
-    print tr.channel, tr.peak-tr.pedestal
+    hit = entry_list[i]
+    chs[i] = int(hit.channel)
+    zch[chs[i]] = hit.zstraw
   
     if (i==0):
       dT=0;
     else:
-      dT = tr.dT
+      dT = hit.dT
   
 #    cstr = "T=%7.3fns, #DeltaT=%7.3fns, %d" % (dT,tr.deltaT,tr.channel)
 #    g[-1].SetTitle(cstr);
@@ -102,7 +90,7 @@ while ientry < tr.GetEntries():
   
   
   for i in range(ntrigs):
-#    print "channel:",chs[i]
+    print "channel:",chs[i]
     rech[chs[i]] = 1;
 
     colch[chs[i]] = i+1;
@@ -209,8 +197,7 @@ while ientry < tr.GetEntries():
     
   
        
-
-
+  ientry=ientry+1
     
   c1.Update();
   
