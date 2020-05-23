@@ -123,7 +123,7 @@ while ientry < tr.GetEntries():
      
     el[-1].SetLineStyle(1);
 
-    if i==41 or i==43 or i==91 or i==14:
+    if i==41 or i==43 or i==91:
       el[-1].SetFillStyle(1001);
 #      el[-1].SetFillColor(colch[i]);
       el[-1].SetFillColor(1);

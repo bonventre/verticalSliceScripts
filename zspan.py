@@ -32,7 +32,8 @@ fout = ROOT.TFile(outputfn,'RECREATE');
 tree=tr.CloneTree(0)
 runtree=runtr.CloneTree(-1)
 
-energycutoff = 10.
+energycutoff = 50.
+minimumcutoff = 350
 nstraws = 96
 
 
@@ -57,7 +58,7 @@ while ientry < tr.GetEntries():
     event=tr.events
     for hit in event.straws:
 
-        if hit.peak-hit.pedestal>energycutoff:
+        if hit.peak-hit.pedestal>energycutoff and hit.minimum>minimumcutoff:
             hist_dt[hit.channel].Fill(hit.deltaT)
     ientry = ientry + 1
 

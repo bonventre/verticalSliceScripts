@@ -8,6 +8,8 @@ ROOT.gSystem.Load("event/Dict.so")
 
 from ROOT import StrawHit,Event
 
+nPed = 5
+
 channel_map = [
     [91,85,79,73,67,61,55,49,
       43,37,31,25,19,13,7,1,
@@ -188,7 +190,7 @@ def parse_straws(filename,outfile):
           hit.samples.push_back(sample1)
           hit.samples.push_back(sample2)
         if samples[0] > 1:
-          hit.pedestal = np.mean(hit.samples[0:6])
+          hit.pedestal = np.mean(hit.samples[0:nPed])
           hit.peak = max(hit.samples)
           hit.minimum = min(hit.samples)
         else:
